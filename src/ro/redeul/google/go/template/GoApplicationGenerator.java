@@ -18,6 +18,7 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import com.intellij.psi.PsiDirectory;
 import com.intellij.psi.PsiManager;
 import com.intellij.util.IncorrectOperationException;
+import com.sun.swing.internal.plaf.basic.resources.basic_es;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ro.redeul.google.go.GoBundle;
@@ -73,9 +74,17 @@ public class GoApplicationGenerator extends WebProjectTemplate {
 
 
                 try {
-                    baseDir.createChildDirectory(this, "bin");
-                    baseDir.createChildDirectory(this, "pkg");
-                    sourceDir[0] = baseDir.createChildDirectory(this, "src");
+                    if (((PsiDirectory) baseDir).findSubdirectory("bin") == null) {
+                        baseDir.createChildDirectory(this, "bin");
+                    }
+
+                    if (((PsiDirectory) baseDir).findSubdirectory("pkg") == null) {
+                        baseDir.createChildDirectory(this, "pkg");
+                    }
+
+                    if (((PsiDirectory) baseDir).findSubdirectory("src") == null) {
+                        sourceDir[0] = baseDir.createChildDirectory(this, "src");
+                    }
                 } catch (Exception e) {
                     LOG.error(e.getMessage());
                 }
@@ -144,7 +153,10 @@ public class GoApplicationGenerator extends WebProjectTemplate {
                         }
 
                         try {
-                            GoTemplatesFactory.createFromTemplate(directory, "main", project.getName().concat(".go"), GoTemplatesFactory.Template.GoAppMain);
+                            String fileName = module.getProject().getName().concat(".go");
+                            if (directory.findFile(fileName) == null) {
+                                GoTemplatesFactory.createFromTemplate(directory, "main", fileName, GoTemplatesFactory.Template.GoAppMain);
+                            }
                         } catch(IncorrectOperationException e) {
                             LOG.error(e.getMessage());
                         }

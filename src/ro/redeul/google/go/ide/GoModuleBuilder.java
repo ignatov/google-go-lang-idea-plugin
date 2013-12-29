@@ -52,8 +52,13 @@ public class GoModuleBuilder extends JavaModuleBuilder implements SourcePathsBui
             @Override
             public void run() {
                 try {
-                    baseDir.createSubdirectory("bin");
-                    baseDir.createSubdirectory("pkg");
+                    if (baseDir.findSubdirectory("bin") == null){
+                        baseDir.createSubdirectory("bin");
+                    }
+
+                    if (baseDir.findSubdirectory("pkg") == null) {
+                        baseDir.createSubdirectory("pkg");
+                    }
                 } catch (Exception e) {
                     LOG.error(e.getMessage());
                 }
@@ -61,7 +66,10 @@ public class GoModuleBuilder extends JavaModuleBuilder implements SourcePathsBui
         });
 
         try {
-            GoTemplatesFactory.createFromTemplate(directory, "main", module.getProject().getName().concat(".go"), GoTemplatesFactory.Template.GoAppMain);
+            String fileName = module.getProject().getName().concat(".go");
+            if (baseDir.findFile(fileName) == null) {
+                GoTemplatesFactory.createFromTemplate(directory, "main", fileName, GoTemplatesFactory.Template.GoAppMain);
+            }
         } catch (Exception e) {
             LOG.error(e.getMessage());
         }
