@@ -143,6 +143,8 @@
     <checkinHandlerFactory implementation="com.goide.actions.fmt.GoFmtCheckinFactory" order="last"/>
 
     <editorNotificationProvider implementation="com.goide.inspections.SetupSDKNotificationProvider"/>
+
+    <readWriteAccessDetector implementation="com.goide.highlighting.GoReadWriteAccessDetector"/>
     
     <lang.inspectionSuppressor language="go" implementationClass="com.goide.inspections.suppression.GoInspectionSuppressor"/>
     
