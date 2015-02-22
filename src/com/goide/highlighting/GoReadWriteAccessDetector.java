@@ -19,9 +19,6 @@ package com.goide.highlighting;
 import com.goide.psi.*;
 import com.intellij.codeInsight.highlighting.ReadWriteAccessDetector;
 import com.intellij.psi.*;
-import com.intellij.psi.util.PropertyUtil;
-import com.intellij.psi.util.PsiTreeUtil;
-import com.intellij.psi.util.PsiUtil;
 
 public class GoReadWriteAccessDetector extends ReadWriteAccessDetector {
 
@@ -37,37 +34,22 @@ public class GoReadWriteAccessDetector extends ReadWriteAccessDetector {
 
   @Override
   public boolean isDeclarationWriteAccess(PsiElement element) {
-    if (PsiTreeUtil.getParentOfType(element, GoAssignmentStatement.class) != null) {
-      return false;
+    if (element instanceof GoVarDefinition) {
+      return true;
     }
-
-    return true;
+    return false;
   }
 
   @Override
   public Access getReferenceAccess(PsiElement referencedElement, PsiReference reference) {
-    //return getExpressionAccess(reference.getElement());
-    return null;
+    if (referencedElement instanceof GoVarDefinition) {
+      return Access.Write;
+    }
+    return Access.Read;
   }
 
   @Override
   public Access getExpressionAccess(PsiElement expression) {
-    return null;
-    /*
-    if (!(expression instanceof PsiExpression)) return Access.Read;
-    PsiExpression expr = (PsiExpression) expression;
-    boolean readAccess = PsiUtil.isAccessedForReading(expr);
-    boolean writeAccess = PsiUtil.isAccessedForWriting(expr);
-    if (!writeAccess && expr instanceof PsiReferenceExpression) {
-      //when searching usages of fields, should show all found setters as a "only write usage"
-      PsiElement actualReferee = ((PsiReferenceExpression) expr).resolve();
-      if (actualReferee instanceof PsiMethod && PropertyUtil.isSimplePropertySetter((PsiMethod)actualReferee)) {
-        writeAccess = true;
-        readAccess = false;
-      }
-    }
-    if (writeAccess && readAccess) return Access.ReadWrite;
-    return writeAccess ? Access.Write : Access.Read;
-    */
+    return Access.Write;
   }
 }
