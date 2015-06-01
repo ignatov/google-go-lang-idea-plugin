@@ -69,7 +69,7 @@ func main() {
     t.name()
     t2 := t.createT()
     Println(t2)
-    t3 := <error>doubleFoo()</error>
+    _, t3 := doubleFoo()
     Println(t3)
 }
 

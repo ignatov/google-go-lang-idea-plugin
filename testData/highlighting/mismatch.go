@@ -7,10 +7,10 @@ type validate interface {
 
 func main() {
     var s validate
-    err := <error descr="Multiple-value s.validate() in single-value context">s.validate()</error>
+    <error descr="Assignment count mismatch: 2 element(s) assigned to 1 element(s)">err := <error descr="Multiple-value s.validate() in single-value context">s.validate()</error></error>
     _ = err
-    v := <error descr="s.void() doesn't return a value">s.void()</error>
+    <error descr="Assignment count mismatch: 0 element(s) assigned to 1 element(s)">v := <error descr="s.void() doesn't return a value">s.void()</error></error>
     _ = v
-    shortDeclarationWithoutExpressions :=<error descr="<expression> expected, got ';'"> </error>;
+    <error descr="Assignment count mismatch: 0 element(s) assigned to 1 element(s)">shortDeclarationWithoutExpressions :=</error><error descr="<expression> expected, got ';'"> </error>;
     _ = shortDeclarationWithoutExpressions
 }

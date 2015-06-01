@@ -90,19 +90,4 @@ public class GoInspectionUtil {
     }
     return count;
   }
-
-  public static void checkExpressionShouldReturnOneResult(@NotNull List<GoExpression> expressions, @NotNull ProblemsHolder result) {
-    for (GoExpression expr : expressions) {
-      int count = getExpressionResultCount(expr);
-      if (count != UNKNOWN_COUNT && count != 1) {
-        String text = expr.getText();
-        if (expr instanceof GoCallExpr) {
-          text = ((GoCallExpr)expr).getExpression().getText();
-        }
-
-        String msg = count == 0 ? text + "() doesn't return a value" : "Multiple-value " + text + "() in single-value context";
-        result.registerProblem(expr, msg, ProblemHighlightType.GENERIC_ERROR);
-      }
-    }
-  }
 }

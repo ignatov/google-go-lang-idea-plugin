@@ -45,7 +45,6 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
       GoDuplicateArgumentInspection.class,
       GoDuplicateReturnArgumentInspection.class,
       GoFunctionVariadicParameterInspection.class,
-      GoVarDeclarationInspection.class,
       GoNoNewVariablesInspection.class,
       GoMissingReturnInspection.class,
       GoFunctionCallInspection.class,
@@ -63,7 +62,8 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
       GoPlaceholderCountInspection.class,
       GoEmbeddedInterfacePointerInspection.class,
       GoStructInitializationInspection.class,
-      GoMethodOnNonLocalTypeInspection.class
+      GoMethodOnNonLocalTypeInspection.class,
+      GoAssignmentCountMismatchInspection.class
     );
   }
 

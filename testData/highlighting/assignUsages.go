@@ -26,5 +26,5 @@ func foo() (int, int) {
 }
 
 func _() {
-	<error descr="Assignment count mismatch: 1 = 2"><error descr="Unused variable 'x'">x</error> := foo(), foo()</error>
+	<error descr="Assignment count mismatch: 2 element(s) assigned to 1 element(s)"><error descr="Unused variable 'x'">x</error> := <error descr="Multiple-value foo() in single-value context">foo()</error>, <error descr="Multiple-value foo() in single-value context">foo()</error></error>
 }
