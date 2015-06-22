@@ -201,6 +201,9 @@
     <localInspection language="go" displayName="Duplicate argument"
                      groupName="Go" enabledByDefault="true" level="ERROR"
                      implementationClass="com.goide.inspections.GoDuplicateArgumentInspection"/>
+    <localInspection language="go" displayName="Printf parameter checker"
+                     groupName="Go" enabledByDefault="true" level="WARNING"
+                     implementationClass="com.goide.inspections.GoPrintfInspection"/>
     <localInspection language="go" displayName="Reserved word used as name"
                      groupName="Go" enabledByDefault="true" level="WARNING"
                      implementationClass="com.goide.inspections.GoReservedWordUsedAsName"/>
