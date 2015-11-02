@@ -18,7 +18,6 @@ package com.goide.runconfig;
 
 import com.goide.GoEnvironmentUtil;
 import com.goide.dlv.DlvDebugProcess;
-import com.goide.dlv.DlvRemoteVmConnection;
 import com.goide.runconfig.application.GoApplicationConfiguration;
 import com.goide.runconfig.application.GoApplicationRunningState;
 import com.goide.util.GoHistoryProcessListener;
@@ -36,26 +35,17 @@ import com.intellij.execution.runners.AsyncGenericProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.RunContentBuilder;
 import com.intellij.execution.ui.RunContentDescriptor;
-import com.intellij.internal.statistic.UsageTrigger;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.io.FileUtil;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.ArrayUtil;
-import com.intellij.util.net.NetUtils;
-import com.intellij.xdebugger.XDebugProcess;
-import com.intellij.xdebugger.XDebugProcessStarter;
-import com.intellij.xdebugger.XDebugSession;
-import com.intellij.xdebugger.XDebuggerManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.concurrency.AsyncPromise;
 import org.jetbrains.concurrency.Promise;
-import org.jetbrains.debugger.connection.RemoteVmConnection;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 
 public class GoBuildingRunner extends AsyncGenericProgramRunner {
   private static final String ID = "GoBuildingRunner";
@@ -102,7 +92,7 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
           super.processTerminated(event);
           if (event.getExitCode() == 0) {
             if (((GoApplicationRunningState)state).isDebug()) {
-              buildingPromise.setResult(new MyDebugStarter(outputFile.getAbsolutePath(), historyProcessListener));
+              buildingPromise.setResult(new GoDlvRunner(outputFile.getAbsolutePath(), historyProcessListener, GoBuildingRunner.this));
             }
             else {
               buildingPromise.setResult(new MyRunStarter(outputFile.getAbsolutePath(), historyProcessListener));
@@ -164,50 +154,6 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
     }
     return file.setExecutable(true);
   }
-  
-  private class MyDebugStarter extends RunProfileStarter {
-    private final String myOutputFilePath;
-    private final GoHistoryProcessListener myHistoryProcessListener;
-
-
-    private MyDebugStarter(@NotNull String outputFilePath, @NotNull GoHistoryProcessListener historyProcessListener) {
-      myOutputFilePath = outputFilePath;
-      myHistoryProcessListener = historyProcessListener;
-    }
-
-    @Nullable
-    @Override
-    public RunContentDescriptor execute(@NotNull RunProfileState state, @NotNull ExecutionEnvironment env)
-      throws ExecutionException {
-      if (state instanceof GoApplicationRunningState) {
-        final int port = findFreePort();
-        FileDocumentManager.getInstance().saveAllDocuments();
-        ((GoApplicationRunningState)state).setHistoryProcessHandler(myHistoryProcessListener);
-        ((GoApplicationRunningState)state).setOutputFilePath(myOutputFilePath);
-        ((GoApplicationRunningState)state).setDebugPort(port);
-
-        // start debugger
-        final ExecutionResult executionResult = state.execute(env.getExecutor(), GoBuildingRunner.this);
-        if (executionResult == null) {
-          throw new ExecutionException("Cannot run debugger");
-        }
-
-        UsageTrigger.trigger("go.dlv.debugger");
-      
-        return XDebuggerManager.getInstance(env.getProject()).startSession(env, new XDebugProcessStarter() {
-          @NotNull
-          @Override
-          public XDebugProcess start(@NotNull XDebugSession session) throws ExecutionException {
-            RemoteVmConnection connection = new DlvRemoteVmConnection();
-            DlvDebugProcess process = new DlvDebugProcess(session, connection, executionResult);
-            connection.open(new InetSocketAddress(NetUtils.getLoopbackAddress(), port));
-            return process;
-          }
-        }).getRunContentDescriptor();
-      }
-      return null;
-    }
-  }
 
   private class MyRunStarter extends RunProfileStarter {
     private final String myOutputFilePath;
@@ -232,27 +178,5 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
       }
       return null;
     }
-  }
-
-  private static int findFreePort() {
-    ServerSocket socket = null;
-    try {
-      //noinspection SocketOpenedButNotSafelyClosed
-      socket = new ServerSocket(0);
-      socket.setReuseAddress(true);
-      return socket.getLocalPort();
-    }
-    catch (Exception ignore) {
-    }
-    finally {
-      if (socket != null) {
-        try {
-          socket.close();
-        }
-        catch (Exception ignore) {
-        }
-      }
-    }
-    throw new IllegalStateException("Could not find a free TCP/IP port to start dlv");
   }
 }

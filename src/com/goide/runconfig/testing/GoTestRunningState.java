@@ -18,13 +18,17 @@ package com.goide.runconfig.testing;
 
 import com.goide.psi.GoFile;
 import com.goide.psi.GoFunctionDeclaration;
+import com.goide.psi.impl.GoPsiImplUtil;
 import com.goide.runconfig.GoConsoleFilter;
+import com.goide.runconfig.GoDlvRunner;
 import com.goide.runconfig.GoRunningState;
 import com.goide.util.GoExecutor;
 import com.intellij.execution.DefaultExecutionResult;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
 import com.intellij.execution.Executor;
+import com.intellij.execution.configurations.ParametersList;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.filters.TextConsoleBuilder;
 import com.intellij.execution.filters.TextConsoleBuilderFactory;
 import com.intellij.execution.process.ProcessHandler;
@@ -40,7 +44,6 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
-import com.intellij.util.PathUtil;
 import com.intellij.util.containers.ContainerUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -50,6 +53,7 @@ import java.util.Collection;
 
 public class GoTestRunningState extends GoRunningState<GoTestRunConfiguration> {
   private String myCoverageFilePath;
+  private int myDebugPort = 59090;
 
   public GoTestRunningState(@NotNull ExecutionEnvironment env, @NotNull Module module, @NotNull GoTestRunConfiguration configuration) {
     super(env, module, configuration);
@@ -75,10 +79,27 @@ public class GoTestRunningState extends GoRunningState<GoTestRunConfiguration> {
     return executionResult;
   }
 
+  public boolean isDebug() {
+    return DefaultDebugExecutor.EXECUTOR_ID.equals(getEnvironment().getExecutor().getId());
+  }
+
+  public void setDebugPort(int debugPort) {
+    myDebugPort = debugPort;
+  }
+
   @Override
   protected GoExecutor patchExecutor(@NotNull GoExecutor executor) throws ExecutionException {
-    executor.withParameters("test", "-v");
-    executor.withParameterString(myConfiguration.getGoToolParams());
+    ParametersList buildFlags = new ParametersList();
+    boolean isDebug = isDebug();
+    if (!isDebug) {
+      executor.withParameters("test", "-v");
+      executor.withParameters(myConfiguration.getGoToolParams());
+    }
+    else if (myConfiguration.getGoToolParams().length() > 0) {
+      buildFlags.addAll(myConfiguration.getGoToolParams());
+    }
+
+    String testTarget = "";
     switch (myConfiguration.getKind()) {
       case DIRECTORY:
         String relativePath = FileUtil.getRelativePath(myConfiguration.getWorkingDirectory(),
@@ -88,16 +109,27 @@ public class GoTestRunningState extends GoRunningState<GoTestRunConfiguration> {
         // See https://golang.org/issues/6909
         String pathSuffix = (myCoverageFilePath == null) ? "..." : ".";
         if (relativePath != null) {
-          executor.withParameters("./" + relativePath + "/" + pathSuffix);
+          testTarget = "./" + relativePath + "/" + pathSuffix;
         }
         else {
-          executor.withParameters("./" + pathSuffix);
+          testTarget = "./" + pathSuffix;
+          executor.withWorkDirectory(myConfiguration.getDirectoryPath());
+        }
+        // TODO Remove hack when https://github.com/derekparker/delve/issues/423 is fixed
+        if (isDebug) {
           executor.withWorkDirectory(myConfiguration.getDirectoryPath());
         }
         addFilterParameter(executor, myConfiguration.getPattern());
         break;
       case PACKAGE:
-        executor.withParameters(myConfiguration.getPackage());
+        testTarget = myConfiguration.getPackage();
+        if (isDebug) {
+          // TODO Remove hack when https://github.com/derekparker/delve/issues/423 is fixed
+          if (!(myConfiguration.getWorkingDirectory().endsWith(testTarget))) {
+            throw new ExecutionException("Working directory is not the same as package");
+          }
+          executor.withWorkDirectory(myConfiguration.getWorkingDirectory());
+        }
         addFilterParameter(executor, myConfiguration.getPattern());
         break;
       case FILE:
@@ -116,13 +148,34 @@ public class GoTestRunningState extends GoRunningState<GoTestRunConfiguration> {
           throw new ExecutionException("Cannot find import path for " + filePath);
         }
 
-        executor.withParameters(importPath);
+        testTarget = importPath;
+        // TODO Remove hack when https://github.com/derekparker/delve/issues/423 is fixed
+        if (isDebug) {
+          executor.withWorkDirectory(file.getContainingDirectory().getVirtualFile().getPath());
+        }
         addFilterParameter(executor, buildFilterPatternForFile((GoFile)file));
         break;
     }
 
-    if (myCoverageFilePath != null) {
+    if (isDebug) {
+      File dlv = GoDlvRunner.getDlv();
+      if (dlv.exists() && !dlv.canExecute()) {
+        //noinspection ResultOfMethodCallIgnored
+        dlv.setExecutable(true, false);
+      }
+
+      executor.withExePath(dlv.getAbsolutePath())
+        .withDebuggerParameters("--listen=localhost:" + myDebugPort, "--headless=true", "test");
+      if (buildFlags.getArray().length > 0) {
+        executor.withDebuggerParameters("--build-flags='" + testTarget + " " + buildFlags.getParametersString() + "'");
+      } else {
+        executor.withDebuggerParameters("--build-flags=" + testTarget, "--");
+      }
+      return executor;
+    }
+    else if (myCoverageFilePath != null) {
       executor.withParameters("-coverprofile=" + myCoverageFilePath, "-covermode=atomic");
+      executor.withParameters(buildFlags.getArray());
     }
 
     return executor;
@@ -139,7 +192,9 @@ public class GoTestRunningState extends GoRunningState<GoTestRunConfiguration> {
 
   protected void addFilterParameter(@NotNull GoExecutor executor, String pattern) {
     if (StringUtil.isNotEmpty(pattern)) {
-      executor.withParameters("-run", pattern);
+      String run = "-run";
+      if (isDebug()) run = "-test.run";
+      executor.withParameters(run + "='" + pattern + "'");
     }
   }
 

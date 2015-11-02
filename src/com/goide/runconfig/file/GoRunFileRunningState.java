@@ -16,20 +16,48 @@
 
 package com.goide.runconfig.file;
 
+import com.goide.runconfig.GoDlvRunner;
 import com.goide.runconfig.GoRunningState;
 import com.goide.util.GoExecutor;
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.module.Module;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
+
 public class GoRunFileRunningState extends GoRunningState<GoRunFileConfiguration> {
+  private int myDebugPort = 59090;
+
   public GoRunFileRunningState(@NotNull ExecutionEnvironment env, @NotNull Module module, GoRunFileConfiguration configuration) {
     super(env, module, configuration);
   }
 
+  public boolean isDebug() {
+    return DefaultDebugExecutor.EXECUTOR_ID.equals(getEnvironment().getExecutor().getId());
+  }
+
+  public void setDebugPort(int debugPort) {
+    myDebugPort = debugPort;
+  }
+
   @Override
   protected GoExecutor patchExecutor(@NotNull GoExecutor executor) throws ExecutionException {
+    if (isDebug()) {
+      File dlv = GoDlvRunner.getDlv();
+      if (dlv.exists() && !dlv.canExecute()) {
+        //noinspection ResultOfMethodCallIgnored
+        dlv.setExecutable(true, false);
+      }
+      String compilerFlags = "--build-flags=\"" + myConfiguration.getFilePath() + "\"";
+      return executor.withExePath(dlv.getAbsolutePath())
+        .withWorkDirectory(myConfiguration.getWorkingDirectory())
+        .withDebuggerParameters("--listen=localhost:" + myDebugPort, "--headless=true", "debug")
+        .withParameterString(compilerFlags)
+        .withParameters("--");
+    }
+
     return executor
       .withParameters("run")
       .withParameterString(myConfiguration.getGoToolParams())

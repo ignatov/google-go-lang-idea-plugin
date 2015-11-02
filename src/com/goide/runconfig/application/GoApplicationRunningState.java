@@ -16,11 +16,10 @@
 
 package com.goide.runconfig.application;
 
-import com.goide.GoConstants;
+import com.goide.runconfig.GoDlvRunner;
 import com.goide.runconfig.GoRunningState;
 import com.goide.util.GoExecutor;
 import com.goide.util.GoHistoryProcessListener;
-import com.goide.util.GoUtil;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.process.ProcessAdapter;
@@ -29,7 +28,6 @@ import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.util.Key;
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -98,24 +96,15 @@ public class GoApplicationRunningState extends GoRunningState<GoApplicationConfi
   @Override
   protected GoExecutor patchExecutor(@NotNull GoExecutor executor) throws ExecutionException {
     if (isDebug()) {
-      File dlv = dlv();
+      File dlv = GoDlvRunner.getDlv();
       if (dlv.exists() && !dlv.canExecute()) {
         //noinspection ResultOfMethodCallIgnored
         dlv.setExecutable(true, false);
       }
       return executor.withExePath(dlv.getAbsolutePath())
-        .withParameters("--listen=localhost:" + myDebugPort, "--headless=true", "exec", myOutputFilePath, "--");
+        .withDebuggerParameters("--listen=localhost:" + myDebugPort, "--headless=true", "exec", myOutputFilePath, "--");
     }
     return executor.withExePath(myOutputFilePath);
-  }
-
-  @NotNull
-  private static File dlv() {
-    String dlvPath = System.getProperty("dlv.path");
-    if (StringUtil.isNotEmpty(dlvPath)) return new File(dlvPath);
-    return new File(GoUtil.getPlugin().getPath(),
-                    "lib/dlv/" + (SystemInfo.isMac ? "mac" : SystemInfo.isWindows ? "windows" : "linux") + "/"
-                    + GoConstants.DELVE_EXECUTABLE_NAME + (SystemInfo.isWindows ? ".exe" : ""));
   }
 
   public void setOutputFilePath(@NotNull String outputFilePath) {

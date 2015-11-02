@@ -16,9 +16,17 @@
 
 package com.goide.runconfig;
 
+import com.goide.dlv.DlvDebugProcess;
+import com.goide.runconfig.file.GoRunFileRunningState;
+import com.goide.runconfig.testing.GoTestRunningState;
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.RunProfile;
+import com.intellij.execution.configurations.RunProfileState;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.DefaultProgramRunner;
+import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.ui.RunContentDescriptor;
 import org.jetbrains.annotations.NotNull;
 
 public class GoRunner extends DefaultProgramRunner {
@@ -32,6 +40,22 @@ public class GoRunner extends DefaultProgramRunner {
 
   @Override
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
-    return DefaultRunExecutor.EXECUTOR_ID.equals(executorId) && profile instanceof GoRunConfigurationBase;
+    return (DefaultRunExecutor.EXECUTOR_ID.equals(executorId) && profile instanceof GoRunConfigurationBase)
+           || DefaultDebugExecutor.EXECUTOR_ID.equals(executorId) && !DlvDebugProcess.IS_DLV_DISABLED;
+  }
+
+  @Override
+  protected RunContentDescriptor doExecute(@NotNull RunProfileState state, @NotNull ExecutionEnvironment env) throws ExecutionException {
+    if (state instanceof GoTestRunningState) {
+      if (((GoTestRunningState)state).isDebug()) {
+        return new GoDlvRunner(this).execute(state, env);
+      }
+    }
+    else if (state instanceof GoRunFileRunningState) {
+      if (((GoRunFileRunningState)state).isDebug()) {
+        return new GoDlvRunner(this).execute(state, env);
+      }
+    }
+    return super.doExecute(state, env);
   }
 }

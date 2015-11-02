@@ -85,7 +85,7 @@ public class GoRunFileConfiguration extends GoRunConfigurationWithMain<GoRunFile
         setFilePath(path + suffix);
         setName(getName().replace(beforeWithoutExt, beforeWithoutExt + suffixWithoutExt));
       }
-    } 
+    }
     return new GoRunFileRunningState(env, module, this);
   }
 }
