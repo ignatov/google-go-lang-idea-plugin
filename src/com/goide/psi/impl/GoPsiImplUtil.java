@@ -595,6 +595,14 @@ public class GoPsiImplUtil {
   }
 
   @Nullable
+  public static GoFunctionType findFunctionType(GoType type) {
+    if (type instanceof GoFunctionType) return (GoFunctionType)type;
+    GoType base = findBaseTypeFromRef(getTypeReference(type));
+    base = base instanceof GoSpecType ? ((GoSpecType)base).getType() : base;
+    return base instanceof GoFunctionType ? (GoFunctionType)base : null;
+  }
+
+  @Nullable
   private static GoType processRangeClause(@NotNull GoVarDefinition o, @NotNull GoRangeClause parent, @Nullable ResolveState context) {
     List<GoExpression> exprs = parent.getExpressionList();
     GoExpression last = ContainerUtil.getLastItem(exprs);

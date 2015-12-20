@@ -15,7 +15,7 @@ func <warning descr="Unused function 'Collection'">Collection</warning>(parent i
      return nil
 }
 
-func <warning>main1</warning>(err error) {
+func <warning descr="Unused function 'main1'">main1</warning>(err error) {
     switch err.(type) {
         case nil: return
     }
@@ -35,7 +35,7 @@ type advSearch struct {
     }
 }
 
-func <warning>search</warning>() bool {
+func <warning descr="Unused function 'search'">search</warning>() bool {
     m := advSearch{}
     return m.Genres.Demographics.Missing
 }
@@ -48,11 +48,11 @@ func g(a, b, c int) (int, int) {
 func f(a, b int) {
 }
 
-func <warning>test</warning>() {
+func <warning descr="Unused function 'test'">test</warning>() {
     f(g(1, 2, 3))
 }
 
-func <warning>test2</warning>() (bool, string) {
+func <warning descr="Unused function 'test2'">test2</warning>() (bool, string) {
     ch := make(chan string)
     var str string
     var isOpen bool
@@ -69,10 +69,10 @@ func <warning>test2</warning>() (bool, string) {
 }
 
 
-func <warning>Test23</warning>() (err error) {
+func <warning descr="Unused function 'Test23'">Test23</warning>() (err error) {
     var c chan int
     select {
-    case <error>err</error> := (<-c):
+    case <error descr="Unused variable 'err'">err</error> := (<-c):
     }
     return err
 }
@@ -81,7 +81,7 @@ func Demo() error {
     return fmt.Errorf("err")
 }
 
-func <warning>main</warning>() {
+func <warning descr="Unused function 'main'">main</warning>() {
     var err error
 
     switch  {
@@ -95,7 +95,7 @@ func <warning>main</warning>() {
     //panic(err)
 }
 
-func <warning>main2</warning>() {
+func <warning descr="Unused function 'main2'">main2</warning>() {
     ch := make(chan string, 2)
     ch <- "first"
     ch <- "second"
@@ -132,7 +132,7 @@ func demo23(a *d, err error) string {
     return a.A
 }
 
-func <warning>main23</warning>() {
+func <warning descr="Unused function 'main23'">main23</warning>() {
     _ = demo23(de("1").Func())
 }
 
@@ -143,8 +143,8 @@ func bar_m() (int, int) {
 	return 0, 0
 }
 
-func <warning>main127</warning>() {
-	foo_m<error>(bar_m())</error>
+func <warning descr="Unused function 'main127'">main127</warning>() {
+	foo_m<error descr="too many arguments in call to foo_m">(bar_m())</error>
 }
 
 type AnInterface interface {
@@ -166,7 +166,7 @@ func (x *mystruct) getAnInterface() AnInterface {
 var getAnInterface = (*mystruct).getAnInterface
 
 func _() {
-	fmt.Println(getAnInterface(&mystruct{}).MyMethod())
+	fmt.Println(getAnInterface<error descr="too many arguments in call to getAnInterface">(&mystruct{})</error>.MyMethod())
 }
 
 type (
