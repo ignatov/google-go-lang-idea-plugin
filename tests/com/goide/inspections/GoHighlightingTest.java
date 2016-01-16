@@ -183,8 +183,8 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
   }
 
   public void testInnerTypesFromOtherPackage() {
-    myFixture.configureByText("main.go", "package main; import \"io\"; type Outer struct { *io.LimitedReader };" +
-                                         "func main() { _ = &Outer{LimitedReader: &io.LimitedReader{}, } }");
+    myFixture.configureByText("main.go", "package main; import \"io\"; type outer struct { *io.LimitedReader };" +
+                                         "func main() { _ = &outer{LimitedReader: &io.LimitedReader{}, } }");
     myFixture.checkHighlighting();
   }
 
@@ -227,8 +227,8 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
   }
 
   public void testNoDuplicateMethodsInOnePackage() {
-    myFixture.configureByText("a.go", "package main; type Foo int; func (f Foo) bar() {}");
-    myFixture.configureByText("b.go", "package main; type Baz int; func (f Baz) bar() {}");
+    myFixture.configureByText("a.go", "package main; type foo int; func (f foo) bar() {}");
+    myFixture.configureByText("b.go", "package main; type baz int; func (f baz) bar() {}");
     myFixture.checkHighlighting();
   }
 

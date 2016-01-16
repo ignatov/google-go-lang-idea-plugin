@@ -85,7 +85,7 @@ public class GoDocumentationProvider extends AbstractDocumentationProvider {
   }
 
   @NotNull
-  private static List<PsiComment> getCommentsInner(@Nullable PsiElement element) {
+  public static List<PsiComment> getCommentsInner(@Nullable PsiElement element) {
     if (element == null) {
       return ContainerUtil.emptyList();
     }

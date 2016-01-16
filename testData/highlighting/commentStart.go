@@ -17,11 +17,11 @@ type Hellloi interface{}
 
 const (
 	<weak_warning descr="Comment should start with 'Helloc'">// help</weak_warning>
-	<warning descr="Unused constant 'Helloc'">Helloc</warning> = 3
+	Helloc = 3
 )
 
 <weak_warning descr="Comment should start with 'Hellloc'">// help</weak_warning>
-const <warning descr="Unused constant 'Hellloc'">Hellloc</warning>, <warning descr="Unused constant 'hellloc2'">hellloc2</warning> = 1, 2
+const Hellloc, hellloc2 = 1, 2
 
 var (
 	<weak_warning descr="Comment should start with 'Hello1'"><weak_warning descr="Comment should start with 'Hellow1'">// help</weak_warning></weak_warning>
@@ -36,6 +36,9 @@ func (a Helllo) Hellllo() {
 	_ = Hello1
 	_ = Hellow1
 	_ = Hello2
+	_ = Helloc
+	_ = Hellloc
+	_ = hellloc2
 }
 
 // Demo does things  -> correct
@@ -72,11 +75,11 @@ func Demo6() {}
 // Deprecated: use other thing
 func Demo7() {}
 
-// Demo8 does things  -> correct
+// Demo8 does things  -> incorrect
 //
 // Deprecated: use other thing
 
-func Demo8() {}
+func <weak_warning descr="'Demo8' should have a comment or not be exported">Demo8</weak_warning>() {}
 
 // Demo does things  -> correct
 //
@@ -84,3 +87,45 @@ func Demo8() {}
 
 // Demo9 demo
 func Demo9() {}
+
+var (
+	<weak_warning descr="'A' should have a comment or not be exported">A</weak_warning> int
+	<weak_warning descr="Comment should start with 'C'">// demo comment</weak_warning>
+	C int
+)
+
+const (
+	<weak_warning descr="'DemoDemo' should have a comment or not be exported">DemoDemo</weak_warning> = 0
+
+	<weak_warning descr="'DemoEmo' should have a comment or not be exported">DemoEmo</weak_warning> = 1
+)
+
+// This should be correct
+const (
+	NewConst = 1
+	NewConst2 = 1
+)
+
+type (
+	<weak_warning descr="'Deeeeo' should have a comment or not be exported">Deeeeo</weak_warning> struct {
+	}
+	<weak_warning descr="Comment should start with 'Ehlo'">// demo stuff</weak_warning>
+	Ehlo struct{
+	}
+)
+
+<weak_warning descr="Comment should start with 'Gigel'">// digi</weak_warning>
+func Gigel() {
+	// demo
+	B := "Hello"
+	_, _, _, _, _ = DemoDemo, DemoEmo, A, B, C
+}
+
+func <weak_warning descr="'Gigel2' should have a comment or not be exported">Gigel2</weak_warning>() {
+	_ , _ = NewConst, NewConst2
+}
+
+func (d Deeeeo) <weak_warning descr="'Gigel' should have a comment or not be exported">Gigel</weak_warning>() {
+	Gigel()
+	Gigel2()
+}
