@@ -32,3 +32,15 @@ func _() (struct {
 	_ = b
 	return struct{x string}{<weak_warning descr="Unnamed field initialization">"demo"</weak_warning>}
 }
+
+type Item struct {
+	Name   string
+}
+
+type Menu []Item
+
+func _() {
+	_ = Menu{
+		{Name: "home"},
+	}
+}

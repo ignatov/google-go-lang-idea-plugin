@@ -33,11 +33,16 @@ public class GoStructInitializationInspection extends GoInspectionBase {
       public void visitCompositeLit(@NotNull GoCompositeLit o) {
         super.visitCompositeLit(o);
 
-        if (PsiTreeUtil.getParentOfType(o, GoReturnStatement.class, GoShortVarDeclaration.class, GoAssignmentStatement.class) == null) return;
+        if (PsiTreeUtil.getParentOfType(o, GoReturnStatement.class, GoShortVarDeclaration.class, GoAssignmentStatement.class) == null) {
+          return;
+        }
 
         GoType type = o.getType();
-        if (!(type instanceof GoStructType) &&
-            !(GoPsiImplUtil.findBaseTypeFromRef(o.getTypeReferenceExpression()) instanceof GoSpecType)) {
+        GoType typeFromTypeRef = GoPsiImplUtil.findTypeFromTypeRef(o.getTypeReferenceExpression());
+        if (!(type instanceof GoStructType ||
+              (typeFromTypeRef instanceof GoSpecType &&
+               ((GoSpecType)typeFromTypeRef).getType() instanceof GoStructType)
+        )) {
           return;
         }
 
