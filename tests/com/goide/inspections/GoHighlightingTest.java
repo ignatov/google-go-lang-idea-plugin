@@ -63,7 +63,8 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
       GoPlaceholderCountInspection.class,
       GoEmbeddedInterfacePointerInspection.class,
       GoStructInitializationInspection.class,
-      GoMethodOnNonLocalTypeInspection.class
+      GoMethodOnNonLocalTypeInspection.class,
+      GoUnusedParameterInspection.class
     );
   }
 
@@ -139,6 +140,7 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
   public void testIota()                      { doTest(); }
   public void testIota2()                     { doTest(); }
   public void testUnaryPointer()              { doTest(); }
+  public void testUnusedParameter()           { doTest(); }
 
   public void testAvoidDuplicatedUnusedImportReports() {
     myFixture.addFileToProject("pack1/a.go", "package foo;");
@@ -269,7 +271,7 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
   public void testPackageWithTestPrefix() {
     myFixture.addFileToProject("pack1/pack1_test.go", "package pack1_test; func Test() {}");
     PsiFile file = myFixture.addFileToProject("pack2/pack2_test.go",
-                                              "package pack2_test; import \"testing\"; func TestTest(t *testing.T) {<error>pack1_test</error>.Test()}");
+                                              "package pack2_test; import \"testing\"; func TestTest(*testing.T) {<error>pack1_test</error>.Test()}");
     myFixture.configureFromExistingVirtualFile(file.getVirtualFile());
     myFixture.checkHighlighting();
   }
@@ -283,7 +285,7 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
   public void testPackageWithTestPrefixNotInsideTestFile() {
     myFixture.addFileToProject("pack1/pack1.go", "package pack1_test; func Test() {}");
     PsiFile file = myFixture.addFileToProject("pack2/pack2_test.go",
-                                              "package pack2_test; import `pack1`; import \"testing\"; func TestTest(t *testing.T) {pack1_test.Test()}");
+                                              "package pack2_test; import `pack1`; import \"testing\"; func TestTest(*testing.T) {pack1_test.Test()}");
     myFixture.configureFromExistingVirtualFile(file.getVirtualFile());
     myFixture.checkHighlighting();
   }
