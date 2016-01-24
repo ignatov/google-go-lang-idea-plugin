@@ -63,7 +63,8 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
       GoPlaceholderCountInspection.class,
       GoEmbeddedInterfacePointerInspection.class,
       GoStructInitializationInspection.class,
-      GoMethodOnNonLocalTypeInspection.class
+      GoMethodOnNonLocalTypeInspection.class,
+      GoUnderscoreUsedAsValueInspection.class
     );
   }
 
@@ -138,6 +139,7 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
   public void testChan()                      { doTest(); }
   public void testIota()                      { doTest(); }
   public void testIota2()                     { doTest(); }
+  public void testUnderscoreUsedAsValue()     { doTest(); }
 
   public void testAvoidDuplicatedUnusedImportReports() {
     myFixture.addFileToProject("pack1/a.go", "package foo;");
