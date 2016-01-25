@@ -66,7 +66,8 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
       GoPlaceholderCountInspection.class,
       GoEmbeddedInterfacePointerInspection.class,
       GoStructInitializationInspection.class,
-      GoMethodOnNonLocalTypeInspection.class
+      GoMethodOnNonLocalTypeInspection.class,
+      GoDirectAssignToStructFieldInMapInspection.class
     );
   }
 
@@ -141,6 +142,7 @@ public class GoHighlightingTest extends GoCodeInsightFixtureTestCase {
   public void testChan()                      { doTest(); }
   public void testIota()                      { doTest(); }
   public void testIota2()                     { doTest(); }
+  public void testAssignToStructFieldInMap()  { doTest(); }
 
   public void testCheckSamePackage_test()     { 
     myFixture.configureByText("a_test.go", "package check; func TestStringer(t *testing.T) {}"); 
