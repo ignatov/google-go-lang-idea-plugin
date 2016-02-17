@@ -158,8 +158,9 @@
     <runConfigurationProducer implementation="com.goide.runconfig.file.GoRunFileConfigurationProducer"/>
 
     <!-- run application -->
-    <programRunner implementation="com.goide.runconfig.GoBuildingRunner" order="before goRunner"/>
-    <programRunner id="goRunner" implementation="com.goide.runconfig.GoRunner"/>
+    <programRunner implementation="com.goide.runconfig.GoBuildingRunner"/>
+    <programRunner implementation="com.goide.runconfig.GoBuildingRunner"/>
+    <programRunner implementation="com.goide.runconfig.GoBuildingRunner"/>
     <runConfigurationProducer implementation="com.goide.runconfig.application.GoApplicationRunConfigurationProducer"/>
     <configurationType implementation="com.goide.runconfig.application.GoApplicationRunConfigurationType"/>
 

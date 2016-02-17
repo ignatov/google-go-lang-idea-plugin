@@ -20,6 +20,9 @@ import com.goide.GoEnvironmentUtil;
 import com.goide.dlv.DlvDebugProcess;
 import com.goide.runconfig.application.GoApplicationConfiguration;
 import com.goide.runconfig.application.GoApplicationRunningState;
+import com.goide.runconfig.file.GoRunFileRunningState;
+import com.goide.runconfig.testing.GoTestRunningState;
+import com.goide.util.GoExecutor;
 import com.goide.util.GoHistoryProcessListener;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionResult;
@@ -74,7 +77,22 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
 
     final AsyncPromise<RunProfileStarter> buildingPromise = new AsyncPromise<RunProfileStarter>();
     final GoHistoryProcessListener historyProcessListener = new GoHistoryProcessListener();
-    ((GoApplicationRunningState)state).createCommonExecutor()
+
+    GoExecutor executor;
+    if (state instanceof GoApplicationRunningState) {
+      executor = ((GoApplicationRunningState)state).createCommonExecutor();
+    }
+    else if (state instanceof GoRunFileRunningState) {
+      executor = ((GoRunFileRunningState)state).createCommonExecutor();
+    }
+    else if (state instanceof GoTestRunningState) {
+      executor = ((GoTestRunningState)state).createCommonExecutor();
+    }
+    else {
+      throw new ExecutionException("Invalid running state");
+    }
+    
+    executor
       .withParameters("build")
       .withParameterString(((GoApplicationRunningState)state).getGoBuildParams())
       .withParameters("-o", outputFile.getAbsolutePath())

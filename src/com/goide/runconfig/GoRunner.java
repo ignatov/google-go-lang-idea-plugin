@@ -17,19 +17,23 @@
 package com.goide.runconfig;
 
 import com.goide.dlv.DlvDebugProcess;
+import com.goide.runconfig.application.GoApplicationRunningState;
 import com.goide.runconfig.file.GoRunFileRunningState;
 import com.goide.runconfig.testing.GoTestRunningState;
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.RunProfileStarter;
 import com.intellij.execution.configurations.RunProfile;
 import com.intellij.execution.configurations.RunProfileState;
 import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.executors.DefaultRunExecutor;
-import com.intellij.execution.runners.DefaultProgramRunner;
+import com.intellij.execution.runners.AsyncGenericProgramRunner;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.RunContentDescriptor;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.concurrency.AsyncPromise;
+import org.jetbrains.concurrency.Promise;
 
-public class GoRunner extends DefaultProgramRunner {
+public class GoRunner extends AsyncGenericProgramRunner {
   private static final String ID = "GoRunner";
 
   @NotNull
@@ -42,6 +46,22 @@ public class GoRunner extends DefaultProgramRunner {
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
     return (DefaultRunExecutor.EXECUTOR_ID.equals(executorId) && profile instanceof GoRunConfigurationBase)
            || DefaultDebugExecutor.EXECUTOR_ID.equals(executorId) && !DlvDebugProcess.IS_DLV_DISABLED;
+  }
+
+  @NotNull
+  @Override
+  protected Promise<RunProfileStarter> prepare(@NotNull ExecutionEnvironment environment, @NotNull final RunProfileState state)
+    throws ExecutionException {
+    if (state instanceof GoTestRunningState) {
+      return new GoTestRunningRunner().prepare(environment, state);
+    }
+    else if (state instanceof GoRunFileRunningState) {
+      return new GoRunFileRunner().prepare(environment, state);
+    }
+    else if (state instanceof GoApplicationRunningState) {
+      return new GoBuildingRunner().prepare(environment, state);
+    }
+    return new AsyncPromise<RunProfileStarter>();
   }
 
   @Override
