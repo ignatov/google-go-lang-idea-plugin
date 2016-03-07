@@ -53,7 +53,6 @@ import java.util.Collection;
 
 public class GoTestRunningState extends GoRunningState<GoTestRunConfiguration> {
   private String myCoverageFilePath;
-  private int myDebugPort = 59090;
 
   public GoTestRunningState(@NotNull ExecutionEnvironment env, @NotNull Module module, @NotNull GoTestRunConfiguration configuration) {
     super(env, module, configuration);
@@ -77,14 +76,6 @@ public class GoTestRunningState extends GoRunningState<GoTestRunConfiguration> {
     DefaultExecutionResult executionResult = new DefaultExecutionResult(consoleView, processHandler);
     executionResult.setRestartActions(new ToggleAutoTestAction());
     return executionResult;
-  }
-
-  public boolean isDebug() {
-    return DefaultDebugExecutor.EXECUTOR_ID.equals(getEnvironment().getExecutor().getId());
-  }
-
-  public void setDebugPort(int debugPort) {
-    myDebugPort = debugPort;
   }
 
   @Override

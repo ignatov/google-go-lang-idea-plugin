@@ -28,18 +28,8 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 
 public class GoRunFileRunningState extends GoRunningState<GoRunFileConfiguration> {
-  private int myDebugPort = 59090;
-
   public GoRunFileRunningState(@NotNull ExecutionEnvironment env, @NotNull Module module, GoRunFileConfiguration configuration) {
     super(env, module, configuration);
-  }
-
-  public boolean isDebug() {
-    return DefaultDebugExecutor.EXECUTOR_ID.equals(getEnvironment().getExecutor().getId());
-  }
-
-  public void setDebugPort(int debugPort) {
-    myDebugPort = debugPort;
   }
 
   @Override

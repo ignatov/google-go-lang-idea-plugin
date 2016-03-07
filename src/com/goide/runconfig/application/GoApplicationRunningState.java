@@ -38,7 +38,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class GoApplicationRunningState extends GoRunningState<GoApplicationConfiguration> {
   private String myOutputFilePath;
   @Nullable private GoHistoryProcessListener myHistoryProcessHandler;
-  private int myDebugPort = 59090;
 
   public GoApplicationRunningState(@NotNull ExecutionEnvironment env, @NotNull Module module,
                                    @NotNull GoApplicationConfiguration configuration) {
@@ -50,15 +49,6 @@ public class GoApplicationRunningState extends GoRunningState<GoApplicationConfi
     return myConfiguration.getKind() == GoApplicationConfiguration.Kind.PACKAGE
            ? myConfiguration.getPackage()
            : myConfiguration.getFilePath();
-  }
-
-  @NotNull
-  public String getGoBuildParams() {
-    return myConfiguration.getGoToolParams();
-  }
-
-  public boolean isDebug() {
-    return DefaultDebugExecutor.EXECUTOR_ID.equals(getEnvironment().getExecutor().getId());
   }
 
   @NotNull
@@ -113,9 +103,5 @@ public class GoApplicationRunningState extends GoRunningState<GoApplicationConfi
 
   public void setHistoryProcessHandler(@Nullable GoHistoryProcessListener historyProcessHandler) {
     myHistoryProcessHandler = historyProcessHandler;
-  }
-
-  public void setDebugPort(int debugPort) {
-    myDebugPort = debugPort;
   }
 }

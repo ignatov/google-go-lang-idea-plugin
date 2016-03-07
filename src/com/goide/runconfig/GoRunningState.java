@@ -20,6 +20,7 @@ import com.goide.util.GoExecutor;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.executors.DefaultDebugExecutor;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -28,6 +29,8 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class GoRunningState<T extends GoRunConfigurationBase<?>> extends CommandLineState {
   @NotNull protected final Module myModule;
+
+  protected int myDebugPort = 59090;
 
   @NotNull
   public T getConfiguration() {
@@ -41,6 +44,19 @@ public abstract class GoRunningState<T extends GoRunConfigurationBase<?>> extend
     myModule = module;
     myConfiguration = configuration;
     addConsoleFilters(new GoConsoleFilter(myConfiguration.getProject(), myModule, myConfiguration.getWorkingDirectoryUrl()));
+  }
+
+  @NotNull
+  public String getGoBuildParams() {
+    return myConfiguration.getGoToolParams();
+  }
+
+  public boolean isDebug() {
+    return DefaultDebugExecutor.EXECUTOR_ID.equals(getEnvironment().getExecutor().getId());
+  }
+
+  public void setDebugPort(int debugPort) {
+    myDebugPort = debugPort;
   }
 
   @NotNull

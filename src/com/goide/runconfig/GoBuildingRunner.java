@@ -18,7 +18,6 @@ package com.goide.runconfig;
 
 import com.goide.GoEnvironmentUtil;
 import com.goide.dlv.DlvDebugProcess;
-import com.goide.runconfig.application.GoApplicationConfiguration;
 import com.goide.runconfig.application.GoApplicationRunningState;
 import com.goide.runconfig.file.GoRunFileRunningState;
 import com.goide.runconfig.testing.GoTestRunningState;
@@ -61,59 +60,70 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
 
   @Override
   public boolean canRun(@NotNull String executorId, @NotNull RunProfile profile) {
-    if (profile instanceof GoApplicationConfiguration) {
-      return DefaultRunExecutor.EXECUTOR_ID.equals(executorId)
-             || DefaultDebugExecutor.EXECUTOR_ID.equals(executorId) && !DlvDebugProcess.IS_DLV_DISABLED;
-    }
-    return false;
+    return (DefaultRunExecutor.EXECUTOR_ID.equals(executorId) && profile instanceof GoRunConfigurationBase)
+           || DefaultDebugExecutor.EXECUTOR_ID.equals(executorId) && !DlvDebugProcess.IS_DLV_DISABLED;
   }
 
   @NotNull
   @Override
   protected Promise<RunProfileStarter> prepare(@NotNull ExecutionEnvironment environment, @NotNull final RunProfileState state)
     throws ExecutionException {
-    final File outputFile = getOutputFile(environment, (GoApplicationRunningState)state);
     FileDocumentManager.getInstance().saveAllDocuments();
 
     final AsyncPromise<RunProfileStarter> buildingPromise = new AsyncPromise<RunProfileStarter>();
     final GoHistoryProcessListener historyProcessListener = new GoHistoryProcessListener();
 
+    String goToolCommand;
+    File outputFile = null;
+    String target = "";
+
     GoExecutor executor;
     if (state instanceof GoApplicationRunningState) {
       executor = ((GoApplicationRunningState)state).createCommonExecutor();
+      outputFile = getOutputFile(environment, (GoApplicationRunningState)state);
+      target = ((GoApplicationRunningState)state).getTarget();
+      goToolCommand = "build";
     }
     else if (state instanceof GoRunFileRunningState) {
       executor = ((GoRunFileRunningState)state).createCommonExecutor();
+      goToolCommand = "run";
     }
     else if (state instanceof GoTestRunningState) {
       executor = ((GoTestRunningState)state).createCommonExecutor();
+      goToolCommand = "test";
     }
     else {
       throw new ExecutionException("Invalid running state");
     }
-    
+
     executor
-      .withParameters("build")
-      .withParameterString(((GoApplicationRunningState)state).getGoBuildParams())
-      .withParameters("-o", outputFile.getAbsolutePath())
-      .withParameters(((GoApplicationRunningState)state).isDebug() ? new String[]{"-gcflags", "-N -l"} : ArrayUtil.EMPTY_STRING_ARRAY)
-      .withParameters(((GoApplicationRunningState)state).getTarget())
+      .withParameters(goToolCommand)
+      .withParameterString(((GoRunningState)state).getGoBuildParams());
+
+    if (outputFile != null) executor.withParameters("-o", outputFile.getAbsolutePath());
+
+    final File finalOutputFile = outputFile;
+    executor
+      .withParameters(((GoRunningState)state).isDebug() ? new String[]{"-gcflags", "-N -l"} : ArrayUtil.EMPTY_STRING_ARRAY)
+      .withParameters(target)
       .showNotifications(true)
       .showOutputOnError()
       .disablePty()
-      .withPresentableName("go build")
-      .withProcessListener(historyProcessListener)
-      .withProcessListener(new ProcessAdapter() {
+      .withPresentableName("go " + goToolCommand)
+      .withProcessListener(historyProcessListener);
 
+    if (state instanceof GoApplicationRunningState) {
+      executor.withProcessListener(new ProcessAdapter() {
         @Override
         public void processTerminated(ProcessEvent event) {
           super.processTerminated(event);
           if (event.getExitCode() == 0) {
-            if (((GoApplicationRunningState)state).isDebug()) {
-              buildingPromise.setResult(new GoDlvRunner(outputFile.getAbsolutePath(), historyProcessListener, GoBuildingRunner.this));
+            if (((GoRunningState)state).isDebug()) {
+              buildingPromise
+                .setResult(new GoDlvRunner(finalOutputFile.getAbsolutePath(), historyProcessListener, GoBuildingRunner.this));
             }
             else {
-              buildingPromise.setResult(new MyRunStarter(outputFile.getAbsolutePath(), historyProcessListener));
+              buildingPromise.setResult(new MyRunStarter(finalOutputFile.getAbsolutePath(), historyProcessListener));
             }
           }
           else {
@@ -121,12 +131,15 @@ public class GoBuildingRunner extends AsyncGenericProgramRunner {
             buildingPromise.setError(new ExecutionException(event.getText()));
           }
         }
-      }).executeWithProgress(false);
+      });
+    }
+
+    executor.executeWithProgress(false);
     return buildingPromise;
   }
 
   @NotNull
-  private static File getOutputFile(@NotNull ExecutionEnvironment environment, @NotNull GoApplicationRunningState state)
+  private static File getOutputFile(@NotNull ExecutionEnvironment environment, @NotNull GoRunningState state)
     throws ExecutionException {
     final File outputFile;
     String outputDirectoryPath = state.getConfiguration().getOutputFilePath();
